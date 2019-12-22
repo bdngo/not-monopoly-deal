@@ -26,6 +26,9 @@ class Card:
     def __init__(self, number, color=None):
         self.number = number
 
+    def __repr__(self):
+        return 'Card {0}'.format(self.number)
+
     def action(self):
         return self.number
 
