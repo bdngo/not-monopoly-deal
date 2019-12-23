@@ -1,8 +1,7 @@
 'Not Monopoly Deal by Bryan Ngo'
 
-## GLOBALS
+## GLOBALS ##
 import random
-# from cards import *
 
 discards = []
 denominations = (1, 2, 3, 4, 5, 10)
@@ -64,7 +63,7 @@ class Player:
         print('\nPay up!')
         while subtotal < amount:
             try:
-                while not sum(self.bank.values()):
+                if not sum(self.bank.values()):
                     for color, count in self.field.items():
                         print('{0}: {1}'.format(color, count))
                     curr_property = input('No more money! Please select a property to give up: ')
@@ -127,9 +126,6 @@ def win(player):
     return False
 
 def game_over():
-    # again = input('Game Over! Play again? (y/n): ')
-    # if again == 'y':
-    #     return
     print('Game Over!')
 
 ## CARDS ##
