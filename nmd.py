@@ -74,7 +74,7 @@ class Player:
                 print("Player {0}'s current bank: ".format(self.order))
                 for denom, count in self.bank.items():
                     print('{0}: {1}'.format(denom, count))
-                curr_amount = int(input('Please select an amount to withdraw ({0} remaining): '.format(amount - subtotal)))
+                curr_amount = int(input('Please select an amount to withdraw ({0}M remaining): '.format(amount - subtotal)))
                 try:
                     assert self.bank[curr_amount] > 0 and curr_amount in denominations
                 except AssertionError:
@@ -195,7 +195,7 @@ class Rent(Card):
             print('{0}: {1}'.format(color, amount))
         chosen_color = input('Select a property to apply rent to: ({0}/{1}) '.format(self.color1, self.color2))
         try:
-            assert player.field[chosen_color] > 0, 'Please pick a property you have'
+            assert player.field[chosen_color] > 0 and chosen_color in [self.color1, self.color2], 'Please pick a property you have'
         except AssertionError as e:
             print(e)
             pass
@@ -204,6 +204,33 @@ class Rent(Card):
         payers.remove(player)
         for i in payers:
             i.pay(player, self.rents[chosen_color][total_properties - 1])
+
+class TargetedRent(Rent):
+
+    def __init__(self):
+        return
+
+    def __repr__(self):
+        return 'Targeted Rent'
+
+    def action(self, player):
+        try:
+            target = int(input('Select a player to target: '))
+            assert target != player.order, 'Do not select yourself'
+        except ValueError:
+            pass
+        print("Player {0}'s current cards on field: ".format(player.order))
+        for color, amount in player.field.items():
+            print('{0}: {1}'.format(color, amount))
+        chosen_color = input('Select a property to apply rent to: ')
+        try:
+            assert player.field[chosen_color] > 0, 'Please pick a property you have'
+        except AssertionError as e:
+            print(e)
+            pass
+        total_properties = player.field[chosen_color]
+        target.pay(player, self.rents[chosen_color][total_properties - 1])
+ 
 
 ## CONSTRUCTORS ##
 def construct_money():
@@ -238,6 +265,8 @@ def construct_rents():
             Rent('Railroad', 'Utility'),
             Rent('Red', 'Yellow')
         ])
+    for _ in range(3):
+        rents.append(TargetedRent())
     return rents
 
 ## INITIALIZATION ##
@@ -256,3 +285,4 @@ turn_count = 1
 while True: # TODO: replace with win condition
     turn(players[turn_count - 1])
     turn_count = (turn_count + 1) % len(players)
+
