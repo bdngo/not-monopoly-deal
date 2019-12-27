@@ -12,3 +12,9 @@ Python program simulating the game Monopoly Deal by Hasbro and sold by Cartamund
 1. Each player draws 5 cards from the pile. 
 1. On their turn, a player draws 2 cards. They can then play up to 3 cards, whether it be money or a property. 
 1. The goal is to get 3 fulls sets of properties. 
+
+**TODO:**
+
+* Add Wild Cards
+* Add Deal Breakers, Hotels/Houses, Just Say No's
+
