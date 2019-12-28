@@ -30,10 +30,13 @@ def empty_deck_check(deck):
             deck.append(discards.pop())
         random.shuffle(deck)
 
-def full_set_check(field_item):
-    color = field_item[0]
-    amount = field_item[1]
+def not_full_set(field_item):
+    color, amount = field_item[0], field_item[1]
     return amount < colors[color] and amount > 0
+
+def full_set(field_item):
+    color, amount = field_item[0], field_item[1]
+    return amount >= colors[color]
 
 ## GAME FUNCTIONALITY ##
 class Player:
@@ -43,6 +46,7 @@ class Player:
         self.hand = []
         self.field = {color: 0 for color in colors.keys()}
         self.bank = {i: 0 for i in denominations}
+        self.housed, self.hoteled = [], []
 
     def __repr__(self):
         print('Current cards on field: ')
@@ -62,6 +66,8 @@ class Player:
     def play(self, index):
         card = self.hand.pop(index)
         card.action(self)
+        if not (isinstance(card, Property) or isinstance(card, WildCard) or isinstance(card, UberWildCard) or isinstance(card, House) or isinstance(card, Hotel)):
+            discards.append(card)
 
     def pay(self, payee, amount):
         subtotal = 0
@@ -137,10 +143,9 @@ def game_over():
 class Card:
     can_no = False
     can_house = False
-    can_steal = False
 
     def __repr__(self):
-        return 'Card: {0}'.format(self.number)
+        return 'Card'
 
     def action(self, player):
         return self.number
@@ -159,7 +164,6 @@ class Money(Card):
 
 class Property(Card):
     can_house = True
-    can_steal = True
 
     def __init__(self, color):
         self.color = color
@@ -169,6 +173,73 @@ class Property(Card):
 
     def action(self, player):
         player.field[self.color] += 1
+
+class WildCard(Property):
+    """Can act as one of two properties. Takes 1 turn to tap."""
+
+    def __init__(self, color1, color2):
+        self.color1 = color1
+        self.color2 = color2
+
+    def __repr__(self):
+        return 'Wild Card: {0}/{1}'.format(self.color1, self.color2)
+
+    def action(self, player):
+        while True:
+            try:
+                tapped = input('Select a color to tap: ')
+                assert tapped in [self.color1, self.color2]
+                break
+            except (ValueError, AssertionError):
+                pass
+            print('Select a property that exists')
+        player.field[tapped] += 1
+
+class UberWildCard(Card):
+    """Can act as any property."""
+
+    def __repr__(self):
+        return 'Über Wild Card: Can act as any property.'
+
+    def action(self, player):
+        while True:
+            try:
+                chosen = input('Select a color to tap: ')
+                assert chosen in colors 
+                break
+            except (ValueError, AssertionError):
+                pass
+            print('Select a property that exists')
+        player.field[chosen] += 1
+
+class House(Card):
+    """Adds 3M to its applied full set."""
+
+    def __repr__(self):
+        return 'House: Adds 3M to the rent of any full set.'
+
+    def action(self, player):
+        print("Player {0}'s current full sets): ".format(target.order))
+        for color, amount in filter(full_set, target.field.items()):
+            print('{0}: {1}'.format(color, amount))
+        applied = input('Select a property to house: ')
+        player.housed.append(applied)
+
+class Hotel(Card):
+    """Adds 4M to its applied housed full set."""
+
+    def __repr(self):
+        return 'Hotel: Adds 4M to the rent of a housed full set.'
+
+    def action(self, player):
+        print("Player {0}'s current housed full sets): ".format(target.order))
+        def housed(field_item):
+            color = field_item[0]
+            return player.field[color] in player.housed
+        for color, amount in filter(housed, filter(full_set, target.field.items())):
+            print('{0}: {1}'.format(color, amount))
+        applied = input('Select a property to house: ')
+        player.hoteled.append(applied)
 
 class PassGo(Card):
     """Draws 2 cards."""
@@ -214,14 +285,20 @@ class Rent(Card):
             except ValueError or AssertionError:
                 pass
             print('Please select a property you have')
+        house_tax = 0
+        if chosen_color in player.housed and chosen_color in player.hoteled:
+            house_tax += 7
+        elif chosen_color in player.housed:
+            house_tax += 3
         total_properties = player.field[chosen_color]
         payers = players[:]
         payers.remove(player)
         for i in payers:
-            i.pay(player, self.rents[chosen_color][total_properties - 1])
+            i.pay(player, self.rents[chosen_color][total_properties - 1] + house_tax)
 
 class TargetedRent(Rent):
     """Applies rent to a specific player."""
+
     def __init__(self):
         return
 
@@ -240,13 +317,18 @@ class TargetedRent(Rent):
             print('{0}: {1}'.format(color, amount))
         chosen_color = input('Select a property to apply rent to: ')
         assert player.field[chosen_color] > 0, 'Please pick a property you have'
+        house_tax = 0
+        if chosen_color in player.housed and chosen_color in player.hoteled:
+            house_tax += 7
+        elif chosen_color in player.housed:
+            house_tax += 3
         total_properties = player.field[chosen_color]
-        target.pay(player, self.rents[chosen_color][total_properties - 1])
- 
+        target.pay(player, self.rents[chosen_color][total_properties - 1] + house_tax)
+
 class DebtCollector(Card):
     """Forces any player to pay you 5M."""
     can_no = True
-    
+
     def __repr__(self):
         return 'Debt Collector: Force any player to play you 5M.'
 
@@ -265,7 +347,7 @@ class Birthday(Card):
     can_no = True
 
     def __repr__(self):
-        return "It's My Birthday: Force all players to pay you 2M." 
+        return "It's My Birthday: Force all players to pay you 2M."
 
     def action(self, player):
         payers = players[:]
@@ -276,10 +358,10 @@ class Birthday(Card):
 class SlyDeal(Card):
     """Forces a player to give you one of their properties."""
     can_no = True
-    
+
     def __repr__(self):
         return 'Sly Deal: Force any player to give you a property *not* part of a full set.'
-    
+
     def action(self, player):
         while True:
             try:
@@ -288,13 +370,13 @@ class SlyDeal(Card):
             except ValueError:
                 pass
             print('Do not select yourself')
-        print("Player {0}'s current field, pick a property): ".format(target.order))
-        for color, amount in filter(full_set_check, target.field.items()):
+        print("Player {0}'s current non-full sets, pick a property): ".format(target.order))
+        for color, amount in filter(not_full_set, target.field.items()):
             print('{0}: {1}'.format(color, amount))
         stolen_prop = input('Select a property to sly deal: ')
         target.field[stolen_prop] -= 1
-        player.field[stolen_prop] += 1 
-        
+        player.field[stolen_prop] += 1
+
 class ForcedDeal(Card):
     """Forces a player to trade a property with you."""
     can_no = True
@@ -311,16 +393,16 @@ class ForcedDeal(Card):
                 pass
             print('Do not select yourself')
         print("Your current field, pick a property): ".format(target.order))
-        for color, amount in filter(full_set_check, target.field.items()):
+        for color, amount in filter(not_full_set, target.field.items()):
             print('{0}: {1}'.format(color, amount))
         give_prop = input('Select a property to give up: ')
         print("Player {0}'s current field, pick a property): ".format(target.order))
-        for color, amount in filter(full_set_check, target.field.items()):
+        for color, amount in filter(not_full_set, target.field.items()):
             print('{0}: {1}'.format(color, amount))
         get_prop = input('Select a property to get: ')
-        player.field[give_prop] -= 1 
+        player.field[give_prop] -= 1
         target.field[get_prop] -= 1
-        player.field[get_prop] += 1 
+        player.field[get_prop] += 1
         target.field[give_prop] += 1
 
 ## CONSTRUCTORS ##
@@ -331,7 +413,7 @@ def construct_money():
     for _ in range(5):
         money.append(Money(2))
     for _ in range(3):
-        money.append([Money(3), Money(4)])
+        money.extend([Money(3), Money(4)])
     for _ in range(2):
         money.append(Money(5))
     money.append(Money(10))
@@ -342,6 +424,18 @@ def construct_props():
     for color in colors.keys():
         for _ in range(colors[color]):
             properties.append(Property(color))
+    for _ in range(2):
+        properties.extend([
+            WildCard('Yellow', 'Red'), 
+            WildCard('Orange', 'Purple')
+        ]) 
+    properties.extend([
+        WildCard('Green', 'Blue'), 
+        WildCard('Brown', 'Light Blue'), 
+        WildCard('Railroad', 'Green'), 
+        WildCard('Railroad', 'Light Blue'), 
+        WildCard('Railroad', 'Utility'), 
+    ])
     return properties
 
 def construct_rents():
@@ -363,10 +457,12 @@ def construct_actions():
     actions.extend([PassGo() for _ in range(10)])
     for _ in range(3):
         actions.extend([
-            DebtCollector(), 
-            Birthday(), 
-            SlyDeal(), 
-            ForcedDeal()
+            DebtCollector(),
+            Birthday(),
+            SlyDeal(),
+            ForcedDeal(), 
+            House(), 
+            Hotel()
         ])
     return actions
 
@@ -378,7 +474,7 @@ while True:
         size = int(input('Number of players: '))
         assert size >= 2 and size <= 5
         break
-    except ValueError or AssertionError:
+    except (ValueError, AssertionError):
         pass
     print('Too few or too many players')
 
@@ -392,4 +488,3 @@ turn_count = 1
 while True: # TODO: replace with win condition
     turn(players[turn_count - 1])
     turn_count = (turn_count + 1) % len(players)
-

@@ -6,6 +6,7 @@ Python program simulating the game Monopoly Deal by Hasbro and sold by Cartamund
 * Properties of the same color are equal (i.e. no names for properties).
 * Priority for rent goes money first, then property.
 * Giving up 1 property ends the rent.
+* Wild cards are treated as normal properties as soon as they are played (i.e. tapping WCs not possible).
  
 **Rules:**
  
