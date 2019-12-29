@@ -38,6 +38,10 @@ def full_set(field_item):
     color, amount = field_item[0], field_item[1]
     return amount >= colors[color]
 
+def print_dict(dictionary):
+    for key, value in dictionary.items():
+        print('{0}: {1}'.format(key, value))
+
 ## GAME FUNCTIONALITY ##
 class Player:
     """Player class."""
@@ -50,11 +54,9 @@ class Player:
 
     def __repr__(self):
         print('Current cards on field: ')
-        for color, amount in self.field.items():
-            print('{0}: {1}'.format(color, amount))
+        print_dict(self.field)
         print('\nCurrent bank: ')
-        for denom, count in self.bank.items():
-            print('{0}: {1}'.format(denom, count))
+        print_dict(self.bank)
         print('\nCurrent hand: ')
         for i in range(len(self.hand)):
             print('[{0}]: {1}'.format(i, self.hand[i]))
@@ -66,7 +68,8 @@ class Player:
     def play(self, index):
         card = self.hand.pop(index)
         card.action(self)
-        if not (isinstance(card, Property) or isinstance(card, WildCard) or isinstance(card, UberWildCard) or isinstance(card, House) or isinstance(card, Hotel)):
+        field_cards = [Property, WildCard, UberWildCard, House, Hotel]
+        if not any([isinstance(card, i) for i in field_cards]): 
             discards.append(card)
 
     def pay(self, payee, amount):
@@ -78,22 +81,22 @@ class Player:
         while subtotal < amount:
             try:
                 if not sum(self.bank.values()):
-                    for color, count in self.field.items():
-                        print('{0}: {1}'.format(color, count))
+                    print_dict(self.field)
                     curr_property = input('No more money! Please select a property to give up: ')
                     assert curr_property in colors.keys()
                     self.field[curr_property] -= 1
                     payee.field[curr_property] += 1
                     return
                 print("Player {0}'s current bank: ".format(self.order))
-                for denom, count in self.bank.items():
-                    print('{0}: {1}'.format(denom, count))
-                curr_amount = int(input('Please select an amount to withdraw ({0}M remaining): '.format(amount - subtotal)))
-                try:
-                    assert self.bank[curr_amount] > 0 and curr_amount in denominations
-                except AssertionError:
+                print_dict(self.bank)
+                while True:
+                    try:
+                        curr_amount = int(input('Please select an amount to withdraw ({0}M remaining): '.format(amount - subtotal)))
+                        assert self.bank[curr_amount] > 0 and curr_amount in denominations
+                        break
+                    except AssertionError:
+                        pass
                     print('Choose money you actually have')
-                    pass
                 self.bank[curr_amount] -= 1
                 payee.bank[curr_amount] += 1
                 subtotal += curr_amount
@@ -109,10 +112,15 @@ def turn(player):
     while actions < 3:
         if not len(player.hand):
             draw_cards(player, 5)
+        print('------------------------------------------------------------------------------------------------')
         print("It is now Player {0}'s turn\n".format(player.order))
         print(player)
         try:
-            curr_card = int(input('Select a card to play: \n'))
+            curr_card = input('Select a card to play (type "skip" to skip turn): \n')
+            if curr_card == 'skip':
+                break
+            else:
+                curr_card = int(curr_card)
             player.play(curr_card)
             actions += 1
             end_turn = input('Player {0} has {1} action(s) remaining. Continue? (y/n): '.format(player.order, 3 - actions))
@@ -286,8 +294,7 @@ class Rent(Card):
 
     def action(self, player):
         print("Player {0}'s current cards on field: ".format(player.order))
-        for color, amount in player.field.items():
-            print('{0}: {1}'.format(color, amount))
+        print_dict(player.field)
         while True:
             try:
                 chosen_color = input('Select a property to apply rent to: ({0}/{1}) '.format(self.color1, self.color2))
@@ -314,7 +321,7 @@ class TargetedRent(Rent):
         return
 
     def __repr__(self):
-        return 'Targeted Rent'
+        return 'Targeted Rent: Force a player to pay rent on a property.'
 
     def action(self, player):
         while True:
@@ -324,8 +331,7 @@ class TargetedRent(Rent):
             except ValueError:
                 pass
             print('Do not select yourself')
-        for color, amount in player.field.items():
-            print('{0}: {1}'.format(color, amount))
+        print_dict(player.field)
         while True:
             try:
                 chosen_color = input('Select a property to apply rent to: ')
@@ -383,8 +389,9 @@ class SlyDeal(Card):
         while True:
             try:
                 target = players[int(input('Select a player to target: '))]
+                assert target is not player
                 break
-            except ValueError:
+            except (ValueError, AssertionError):
                 pass
             print('Do not select yourself')
         print("Player {0}'s current non-full sets, pick a property): ".format(target.order))
@@ -410,7 +417,7 @@ class ForcedDeal(Card):
                 pass
             print('Do not select yourself')
         print("Your current field, pick a property): ".format(target.order))
-        for color, amount in filter(not_full_set, target.field.items()):
+        for color, amount in filter(not_full_set, player.field.items()):
             print('{0}: {1}'.format(color, amount))
         give_prop = input('Select a property to give up: ')
         print("Player {0}'s current field, pick a property): ".format(target.order))
@@ -505,3 +512,4 @@ turn_count = 1
 while True: # TODO: replace with win condition
     turn(players[turn_count - 1])
     turn_count = (turn_count + 1) % len(players)
+
