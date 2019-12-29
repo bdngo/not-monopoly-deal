@@ -72,6 +72,9 @@ class Player:
     def pay(self, payee, amount):
         subtotal = 0
         print('\nPay up!')
+        if sum(self.field.values()) + sum(self.bank.values()) == 0:
+            print('Player {0} has nothing, skipping...'.format(self.order))
+            return
         while subtotal < amount:
             try:
                 if not sum(self.bank.values()):
@@ -219,24 +222,32 @@ class House(Card):
         return 'House: Adds 3M to the rent of any full set.'
 
     def action(self, player):
-        print("Player {0}'s current full sets): ".format(target.order))
-        for color, amount in filter(full_set, target.field.items()):
+        print("Player {0}'s current full sets): ".format(player.order))
+        full_sets = filter(full_set, player.field.items())
+        for color, amount in full_sets: 
             print('{0}: {1}'.format(color, amount))
-        applied = input('Select a property to house: ')
+        while True:
+            try:
+                applied = input('Select a property to house: ')
+                assert player.field[applied] > 0 and applied in [i[0] for i in full_sets]
+                break
+            except (ValueError, AssertionError):
+                pass
+            print('Select a full set')
         player.housed.append(applied)
 
 class Hotel(Card):
     """Adds 4M to its applied housed full set."""
 
-    def __repr(self):
+    def __repr__(self):
         return 'Hotel: Adds 4M to the rent of a housed full set.'
 
     def action(self, player):
-        print("Player {0}'s current housed full sets): ".format(target.order))
+        print("Player {0}'s current housed full sets: ".format(player.order))
         def housed(field_item):
             color = field_item[0]
             return player.field[color] in player.housed
-        for color, amount in filter(housed, filter(full_set, target.field.items())):
+        for color, amount in filter(housed, filter(full_set, player.field.items())):
             print('{0}: {1}'.format(color, amount))
         applied = input('Select a property to house: ')
         player.hoteled.append(applied)
@@ -282,7 +293,7 @@ class Rent(Card):
                 chosen_color = input('Select a property to apply rent to: ({0}/{1}) '.format(self.color1, self.color2))
                 assert player.field[chosen_color] > 0 and chosen_color in [self.color1, self.color2]
                 break
-            except ValueError or AssertionError:
+            except (ValueError, AssertionError):
                 pass
             print('Please select a property you have')
         house_tax = 0
@@ -308,15 +319,21 @@ class TargetedRent(Rent):
     def action(self, player):
         while True:
             try:
-                target = int(input('Select a player to target: '))
+                target = players[int(input('Select a player to target: '))]
                 break
             except ValueError:
                 pass
             print('Do not select yourself')
         for color, amount in player.field.items():
             print('{0}: {1}'.format(color, amount))
-        chosen_color = input('Select a property to apply rent to: ')
-        assert player.field[chosen_color] > 0, 'Please pick a property you have'
+        while True:
+            try:
+                chosen_color = input('Select a property to apply rent to: ')
+                assert player.field[chosen_color] > 0
+                break
+            except (ValueError, AssertionError):
+                pass
+            print('Please select a property you have')
         house_tax = 0
         if chosen_color in player.housed and chosen_color in player.hoteled:
             house_tax += 7
@@ -335,7 +352,7 @@ class DebtCollector(Card):
     def action(self, player):
         while True:
             try:
-                target = int(input('Select a player to target: '))
+                target = players[int(input('Select a player to target: '))]
                 break
             except ValueError:
                 pass
@@ -365,7 +382,7 @@ class SlyDeal(Card):
     def action(self, player):
         while True:
             try:
-                target = int(input('Select a player to target: '))
+                target = players[int(input('Select a player to target: '))]
                 break
             except ValueError:
                 pass
@@ -387,7 +404,7 @@ class ForcedDeal(Card):
     def action(self, player):
         while True:
             try:
-                target = int(input('Select a player to target: '))
+                target = players[int(input('Select a player to target: '))]
                 break
             except ValueError:
                 pass

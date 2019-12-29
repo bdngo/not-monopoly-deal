@@ -16,6 +16,6 @@ Python program simulating the game Monopoly Deal by Hasbro and sold by Cartamund
 
 **TODO:**
 
-* Add Wild Cards
-* Add Deal Breakers, Hotels/Houses, Just Say No's
+* Add Deal Breakers, Just Say No's
+* Try to make game more faithful to original
 
