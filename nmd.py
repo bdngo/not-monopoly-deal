@@ -83,7 +83,7 @@ class Player:
                 if not sum(self.bank.values()):
                     print_dict(self.field)
                     curr_property = input('No more money! Please select a property to give up: ')
-                    assert curr_property in colors.keys()
+                    assert curr_property in colors.keys() and self.field[curr_property] > 0
                     self.field[curr_property] -= 1
                     payee.field[curr_property] += 1
                     return
@@ -112,21 +112,18 @@ def turn(player):
     while actions < 3:
         if not len(player.hand):
             draw_cards(player, 5)
-        print('------------------------------------------------------------------------------------------------')
+        print('--------------------------------------------------------------------------------')
         print("It is now Player {0}'s turn\n".format(player.order))
         print(player)
         try:
-            curr_card = input('Select a card to play (type "skip" to skip turn): \n')
-            if curr_card == 'skip':
+            curr_card = input('Player {0} has {1} action(s) remaining. Select a card to play (type "end" to end turn): \n'.format(player.order, 3 - actions))
+            if curr_card == 'end' or not len(player.hand):
                 break
             else:
                 curr_card = int(curr_card)
             player.play(curr_card)
             actions += 1
-            end_turn = input('Player {0} has {1} action(s) remaining. Continue? (y/n): '.format(player.order, 3 - actions))
-            if end_turn == 'n' or not len(player.hand):
-                break
-        except ValueError:
+        except (ValueError, IndexError):
             pass
     if win(player):
         print('Player {0} wins!'.format(player.order))
@@ -353,7 +350,7 @@ class DebtCollector(Card):
     can_no = True
 
     def __repr__(self):
-        return 'Debt Collector: Force any player to play you 5M.'
+        return 'Debt Collector: Force any player to pay you 5M.'
 
     def action(self, player):
         while True:
