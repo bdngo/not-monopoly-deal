@@ -35,6 +35,7 @@ Debt Collector | Forces any player to pay you 5M.
 It's My Birthday | Forces all players to pay you 2M. 
 Sly Deal | Allows you to take a property *not* part of a full set from another player. 
 Forced Deal | Allows you to trade a property with another player. 
+Deal Breaker | Allows you to steal a full set from another player. 
 
 **Rules:**
  
@@ -44,6 +45,6 @@ Forced Deal | Allows you to trade a property with another player.
 
 **TODO:**
 
-- [ ] Add Deal Breakers, Just Say No's
+- [ ] Add Just Say No's
 - [ ] Try to make game more faithful to original in general
 
