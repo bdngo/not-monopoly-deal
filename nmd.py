@@ -1,6 +1,6 @@
 'Not Monopoly Deal by Bryan Ngo'
 
-## GLOBALS ##
+# GLOBALS #
 import random
 
 discards = []
@@ -18,11 +18,13 @@ colors = {
     'Utility': 2
 }
 
-## HELPER FUNCTIONS ##
+
+# HELPER FUNCTIONS #
 def draw_cards(player, number):
     assert isinstance(player, Player)
     for _ in range(number):
         player.draw()
+
 
 def empty_deck_check(deck):
     if len(deck) == 0:
@@ -30,18 +32,22 @@ def empty_deck_check(deck):
             deck.append(discards.pop())
         random.shuffle(deck)
 
+
 def not_full_set(field_item):
     color, amount = field_item[0], field_item[1]
     return amount < colors[color] and amount > 0
+
 
 def full_set(field_item):
     color, amount = field_item[0], field_item[1]
     return amount >= colors[color]
 
+
 def print_dict(dictionary):
-    """Prints the keys and values of a dictionary in a human-readable format."""
+    """Prints the keys and values of a dictionary in human-readable format."""
     for key, value in dictionary.items():
         print('{0}: {1}'.format(key, value))
+
 
 def fs_input(statement, error, assertions=lambda x: True):
     """Continuously asks for input with STATEMENT until ASSERTIONS is true, otherwise print ERROR.
@@ -56,9 +62,11 @@ def fs_input(statement, error, assertions=lambda x: True):
         print(error)
     return output
 
-## GAME FUNCTIONALITY ##
+
+# GAME FUNCTIONALITY #
 class Player:
     """Player class."""
+
     def __init__(self, order):
         self.order = order
         self.hand = []
@@ -83,7 +91,7 @@ class Player:
         card = self.hand.pop(index)
         card.action(self)
         field_cards = [Property, WildCard, UberWildCard, House, Hotel]
-        if not any([isinstance(card, i) for i in field_cards]): 
+        if not any([isinstance(card, i) for i in field_cards]):
             discards.append(card)
 
     def pay(self, payee, amount):
@@ -103,12 +111,17 @@ class Player:
                     return
                 print("Player {0}'s current bank: ".format(self.order))
                 print_dict(self.bank)
-                curr_amount = int(fs_input('Please select an amount to withdraw ({0}M remaining): '.format(amount - subtotal), 'Choose money you actually have', lambda x: self.bank[x] > 0 and x in denominations))
+                curr_amount = int(fs_input(
+                    'Please select an amount to withdraw ({0}M remaining): '.format(amount - subtotal),
+                    'Choose money you actually have',
+                    lambda x: self.bank[x] > 0 and x in denominations
+                ))
                 self.bank[curr_amount] -= 1
                 payee.bank[curr_amount] += 1
                 subtotal += curr_amount
             except ValueError:
                 pass
+
 
 def turn(player):
     """Draws 2 from DECK, then asks player to play CARD no more than 3 times."""
@@ -123,7 +136,10 @@ def turn(player):
         print("It is now Player {0}'s turn\n".format(player.order))
         print(player)
         try:
-            curr_card = input('Player {0} has {1} action(s) remaining. Select a card to play (type "end" to end turn): \n'.format(player.order, 3 - actions))
+            curr_card = input(
+                'Player {0} has {1} action(s) remaining.\n'
+                'Select a card to play (type "end" to end turn): '.format(player.order, 3 - actions)
+            )
             if curr_card == 'end' or not len(player.hand):
                 break
             else:
@@ -142,6 +158,7 @@ def turn(player):
         discards.append(player.hand.pop(dis_card))
     return
 
+
 def win(player):
     full_sets = 0
     for property in player.field.keys():
@@ -149,10 +166,12 @@ def win(player):
             full_sets += 1
     return full_sets >= 3
 
+
 def game_over():
     print('Game Over!')
 
-## CARDS ##
+
+# CARDS #
 class Card:
     can_no = False
     can_house = False
@@ -162,6 +181,7 @@ class Card:
 
     def action(self, player):
         return self.number
+
 
 class Money(Card):
 
@@ -175,6 +195,7 @@ class Money(Card):
     def action(self, player):
         player.bank[self.amount] += 1
 
+
 class Property(Card):
     can_house = True
 
@@ -187,6 +208,7 @@ class Property(Card):
     def action(self, player):
         player.field[self.color] += 1
 
+
 class WildCard(Property):
     """Can act as one of two properties. Takes 1 turn to tap."""
 
@@ -198,8 +220,13 @@ class WildCard(Property):
         return 'Wild Card: {0}/{1}'.format(self.color1, self.color2)
 
     def action(self, player):
-        tapped = fs_input('Select a color to tap: ', 'Select a property that exists', lambda x: x in [self.color1, self.color2])
+        tapped = fs_input(
+            'Select a color to tap: ',
+            'Select a property that exists',
+            lambda x: x in [self.color1, self.color2]
+        )
         player.field[tapped] += 1
+
 
 class UberWildCard(Card):
     """Can act as any property."""
@@ -208,8 +235,13 @@ class UberWildCard(Card):
         return 'Über Wild Card: Can act as any property.'
 
     def action(self, player):
-        chosen = fs_input('Select a color to tap: ', 'Select a property that exists', lambda x: x in colors)
+        chosen = fs_input(
+            'Select a color to tap: ',
+            'Select a property that exists',
+            lambda x: x in colors
+        )
         player.field[chosen] += 1
+
 
 class House(Card):
     """Adds 3M to its applied full set."""
@@ -220,10 +252,15 @@ class House(Card):
     def action(self, player):
         print("Player {0}'s current full sets): ".format(player.order))
         full_sets = filter(full_set, player.field.items())
-        for color, amount in full_sets: 
+        for color, amount in full_sets:
             print('{0}: {1}'.format(color, amount))
-        applied = fs_input('Select a property to house: ', 'Select a full set', lambda x: player.field[x] > 0 and x in map(lambda x: x[0], full_sets))
+        applied = fs_input(
+            'Select a property to house: ',
+            'Select a full set',
+            lambda x: player.field[x] > 0 and x in map(lambda x: x[0], full_sets)
+        )
         player.housed.append(applied)
+
 
 class Hotel(Card):
     """Adds 4M to its applied housed full set."""
@@ -233,14 +270,20 @@ class Hotel(Card):
 
     def action(self, player):
         print("Player {0}'s current housed full sets: ".format(player.order))
+
         def housed(field_item):
             color = field_item[0]
             return player.field[color] in player.housed
         full_housed = filter(housed, filter(full_set, player.field.items()))
         for color, amount in full_housed:
             print('{0}: {1}'.format(color, amount))
-        applied = fs_input('Select a property to hotel: ', 'Select a full set', lambda x: player.field[x] > 0 and x in map(lambda x: x[0], full_housed))
+        applied = fs_input(
+            'Select a property to hotel: ',
+            'Select a full set',
+            lambda x: player.field[x] > 0 and x in map(lambda x: x[0], full_housed)
+        )
         player.hoteled.append(applied)
+
 
 class PassGo(Card):
     """Draws 2 cards."""
@@ -250,6 +293,7 @@ class PassGo(Card):
 
     def action(self, player):
         draw_cards(player, 2)
+
 
 class Rent(Card):
     """Applies rent to all players."""
@@ -277,7 +321,11 @@ class Rent(Card):
     def action(self, player):
         print("Player {0}'s current cards on field: ".format(player.order))
         print_dict(player.field)
-        chosen_color = fs_input('Select a property to apply rent to: ({0}/{1}) '.format(self.color1, self.color2), 'Please select a property you have', lambda x: player.field[x] > 0 and x in [self.color1, self.color2])
+        chosen_color = fs_input(
+            'Select a property to apply rent to: ({0}/{1}) '.format(self.color1, self.color2),
+            'Please select a property you have',
+            lambda x: player.field[x] > 0 and x in [self.color1, self.color2]
+        )
         house_tax = 0
         if chosen_color in player.housed and chosen_color in player.hoteled:
             house_tax += 7
@@ -289,6 +337,7 @@ class Rent(Card):
         for i in payers:
             i.pay(player, self.rents[chosen_color][total_properties - 1] + house_tax)
 
+
 class TargetedRent(Rent):
     """Applies rent to a specific player."""
 
@@ -299,9 +348,17 @@ class TargetedRent(Rent):
         return 'Targeted Rent: Force a player to pay rent on a property.'
 
     def action(self, player):
-        target = players[int(fs_input('Select a player to target: ', 'Do not select yourself', lambda x: int(x) != player.order))]
+        target = players[int(fs_input(
+            'Select a player to target: ',
+            'Do not select yourself',
+            lambda x: int(x) != player.order
+        ))]
         print_dict(player.field)
-        chosen_color = fs_input('Select a property to apply rent to: ', 'Please select a property you have', lambda x: player.field[x] > 0)
+        chosen_color = fs_input(
+            'Select a property to apply rent to: ',
+            'Please select a property you have',
+            lambda x: player.field[x] > 0
+        )
         house_tax = 0
         if chosen_color in player.housed and chosen_color in player.hoteled:
             house_tax += 7
@@ -309,6 +366,7 @@ class TargetedRent(Rent):
             house_tax += 3
         total_properties = player.field[chosen_color]
         target.pay(player, self.rents[chosen_color][total_properties - 1] + house_tax)
+
 
 class DebtCollector(Card):
     """Forces any player to pay you 5M."""
@@ -318,8 +376,13 @@ class DebtCollector(Card):
         return 'Debt Collector: Force any player to pay you 5M.'
 
     def action(self, player):
-       target = players[int(fs_input('Select a player to target: ', 'Do not select yourself', lambda x: x != player.order))]
-       target.pay(player, 5)
+        target = players[int(fs_input(
+            'Select a player to target: ',
+            'Do not select yourself',
+            lambda x: x != player.order
+        ))]
+        target.pay(player, 5)
+
 
 class Birthday(Card):
     """Forces all players to pay you 2M."""
@@ -334,6 +397,7 @@ class Birthday(Card):
         for i in payers:
             i.pay(player, 2)
 
+
 class SlyDeal(Card):
     """Forces a player to give you one of their properties."""
     can_no = True
@@ -342,13 +406,18 @@ class SlyDeal(Card):
         return 'Sly Deal: Force any player to give you a property *not* part of a full set.'
 
     def action(self, player):
-        target = players[int(fs_input('Select a player to target: ', 'Do not select yourself', lambda x: int(x) != player.order))]
+        target = players[int(fs_input(
+            'Select a player to target: ',
+            'Do not select yourself',
+            lambda x: int(x) != player.order
+        ))]
         print("Player {0}'s current non-full sets, pick a property): ".format(target.order))
         for color, amount in filter(not_full_set, target.field.items()):
             print('{0}: {1}'.format(color, amount))
         stolen_prop = input('Select a property to sly deal: ')
         target.field[stolen_prop] -= 1
         player.field[stolen_prop] += 1
+
 
 class ForcedDeal(Card):
     """Forces a player to trade a property with you."""
@@ -358,7 +427,11 @@ class ForcedDeal(Card):
         return 'Forced Deal: Force any player to trade a property *not* part of a full set with you.'
 
     def action(self, player):
-        target = players[int(fs_input('Select a player to target: ', 'Do not select yourself', lambda x: int(x) != player.order))]
+        target = players[int(fs_input(
+            'Select a player to target: ',
+            'Do not select yourself',
+            lambda x: int(x) != player.order
+        ))]
         print("Your current field, pick a property): ".format(target.order))
         for color, amount in filter(not_full_set, player.field.items()):
             print('{0}: {1}'.format(color, amount))
@@ -372,6 +445,7 @@ class ForcedDeal(Card):
         player.field[get_prop] += 1
         target.field[give_prop] += 1
 
+
 class DealBreaker(Card):
     """Takes a full set from a player."""
     can_no = True
@@ -380,16 +454,25 @@ class DealBreaker(Card):
         return 'Deal Breaker: Steal a full set.'
 
     def action(self, player):
-        target = players[int(fs_input('Select a player to target: ', 'Do not select yourself', lambda x: int(x) != player.order))]
+        target = players[int(fs_input(
+            'Select a player to target: ',
+            'Do not select yourself',
+            lambda x: int(x) != player.order
+        ))]
         print("Player {0}'s full sets: ".format(target.order))
         full_sets = filter(full_set, player.field.items())
-        for color, amount in full_sets: 
+        for color, amount in full_sets:
             print('{0}: {1}'.format(color, amount))
-        chosen_set = fs_input('Select a full set: ', 'Select a *full* set that actually exists', lambda x: x in map(lambda x: x[0], full_sets))
+        chosen_set = fs_input(
+            'Select a full set: ',
+            'Select a *full* set that actually exists',
+            lambda x: x in map(lambda x: x[0], full_sets)
+        )
         player.field[chosen_set] += target.field[chosen_set]
         target.field[chosen_set] = 0
 
-## CONSTRUCTORS ##
+
+# CONSTRUCTORS #
 def construct_money():
     money = []
     for _ in range(6):
@@ -403,6 +486,7 @@ def construct_money():
     money.append(Money(10))
     return money
 
+
 def construct_props():
     properties = []
     for color in colors.keys():
@@ -410,17 +494,18 @@ def construct_props():
             properties.append(Property(color))
     for _ in range(2):
         properties.extend([
-            WildCard('Yellow', 'Red'), 
+            WildCard('Yellow', 'Red'),
             WildCard('Orange', 'Purple')
-        ]) 
+        ])
     properties.extend([
-        WildCard('Green', 'Blue'), 
-        WildCard('Brown', 'Light Blue'), 
-        WildCard('Railroad', 'Green'), 
-        WildCard('Railroad', 'Light Blue'), 
-        WildCard('Railroad', 'Utility'), 
+        WildCard('Green', 'Blue'),
+        WildCard('Brown', 'Light Blue'),
+        WildCard('Railroad', 'Green'),
+        WildCard('Railroad', 'Light Blue'),
+        WildCard('Railroad', 'Utility'),
     ])
     return properties
+
 
 def construct_rents():
     rents = []
@@ -436,6 +521,7 @@ def construct_rents():
         rents.append(TargetedRent())
     return rents
 
+
 def construct_actions():
     actions = []
     actions.extend([PassGo() for _ in range(10)])
@@ -444,16 +530,21 @@ def construct_actions():
             DebtCollector(),
             Birthday(),
             SlyDeal(),
-            ForcedDeal(), 
-            House(), 
+            ForcedDeal(),
+            House(),
             Hotel()
         ])
     return actions
 
-## INITIALIZATION ##
+
+# INITIALIZATION #
 deck = construct_money() + construct_props() + construct_rents() + construct_actions()
 
-size = int(fs_input('Number of players: ', 'Too few or too many players', lambda x: int(x) >= 2 and int(x) <= 5))
+size = int(fs_input(
+    'Number of players: ',
+    'Too few or too many players',
+    lambda x: int(x) >= 2 and int(x) <= 5
+))
 
 players = [Player(i) for i in range(size)]
 print('Game started with {0} players'.format(len(players)))
@@ -462,7 +553,7 @@ for i in players:
     draw_cards(i, 5)
 
 turn_count = 1
-while True: # TODO: replace with win condition
+while True:  # TODO: replace with win condition
     turn(players[turn_count - 1])
     turn_count = (turn_count + 1) % len(players)
 
