@@ -21,12 +21,14 @@ colors = {
 
 # HELPER FUNCTIONS #
 def draw_cards(player, number):
+    """Draws NUMBER cards into PLAYER's hand."""
     assert isinstance(player, Player)
     for _ in range(number):
         player.draw()
 
 
 def empty_deck_check(deck):
+    """Checks if the main deck is empty and reshuffles the discards pile if it is."""
     if len(deck) == 0:
         for _ in discards:
             deck.append(discards.pop())
@@ -34,11 +36,13 @@ def empty_deck_check(deck):
 
 
 def not_full_set(field_item):
+    """Checks if all FIELD_ITEMs are not members of a full set."""
     color, amount = field_item[0], field_item[1]
     return amount < colors[color] and amount > 0
 
 
 def full_set(field_item):
+    """Checks if all FIELD_ITEMs are members of a full set."""
     color, amount = field_item[0], field_item[1]
     return amount >= colors[color]
 
@@ -97,10 +101,10 @@ class Player:
     def pay(self, payee, amount):
         subtotal = 0
         print('\nPay up!')
-        if sum(self.field.values()) + sum(self.bank.values()) == 0:
-            print('Player {0} has nothing, skipping...'.format(self.order))
-            return
         while subtotal < amount:
+            if sum(self.field.values()) + sum(self.bank.values()) == 0:
+                print('Player {0} has nothing, skipping...'.format(self.order))
+                return
             try:
                 if not sum(self.bank.values()):
                     print_dict(self.field)
@@ -124,7 +128,7 @@ class Player:
 
 
 def turn(player):
-    """Draws 2 from DECK, then asks player to play CARD no more than 3 times."""
+    """Draws 2 from DECK, then asks PLAYER to play CARD no more than 3 times."""
     assert isinstance(player, Player), 'Not an instance of Player class'
     empty_deck_check(deck)
     draw_cards(player, 2)
@@ -156,7 +160,6 @@ def turn(player):
         print(player)
         dis_card = int(input('Too many cards! Select a card to discard: \n'))
         discards.append(player.hand.pop(dis_card))
-    return
 
 
 def win(player):
@@ -173,6 +176,7 @@ def game_over():
 
 # CARDS #
 class Card:
+    """Card superclass."""
     can_no = False
     can_house = False
 
@@ -184,6 +188,9 @@ class Card:
 
 
 class Money(Card):
+    """Used to pay off rents and the like.
+    Comes in denoominations of 1, 2, 3, 4, 5, 10.
+    """
 
     def __init__(self, amount):
         assert amount in denominations
@@ -474,6 +481,7 @@ class DealBreaker(Card):
 
 # CONSTRUCTORS #
 def construct_money():
+    """Returns a list of Money instances."""
     money = []
     for _ in range(6):
         money.append(Money(1))
@@ -488,6 +496,7 @@ def construct_money():
 
 
 def construct_props():
+    """Returns a list of Property instances."""
     properties = []
     for color in colors.keys():
         for _ in range(colors[color]):
@@ -508,6 +517,7 @@ def construct_props():
 
 
 def construct_rents():
+    """Returns a list of Rent instances."""
     rents = []
     for _ in range(2):
         rents.extend([
@@ -523,6 +533,7 @@ def construct_rents():
 
 
 def construct_actions():
+    """Returns a list of action cards."""
     actions = []
     actions.extend([PassGo() for _ in range(10)])
     for _ in range(3):
