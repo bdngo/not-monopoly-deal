@@ -39,8 +39,22 @@ def full_set(field_item):
     return amount >= colors[color]
 
 def print_dict(dictionary):
+    """Prints the keys and values of a dictionary in a human-readable format."""
     for key, value in dictionary.items():
         print('{0}: {1}'.format(key, value))
+
+def fs_input(statement, error, assertions=lambda x: True):
+    """Continuously asks for input with STATEMENT until ASSERTIONS is true, otherwise print ERROR.
+    Returns the input."""
+    while True:
+        try:
+            output = input(statement)
+            assert assertions(output)
+            break
+        except (ValueError, AssertionError):
+            pass
+        print(error)
+    return output
 
 ## GAME FUNCTIONALITY ##
 class Player:
@@ -89,14 +103,7 @@ class Player:
                     return
                 print("Player {0}'s current bank: ".format(self.order))
                 print_dict(self.bank)
-                while True:
-                    try:
-                        curr_amount = int(input('Please select an amount to withdraw ({0}M remaining): '.format(amount - subtotal)))
-                        assert self.bank[curr_amount] > 0 and curr_amount in denominations
-                        break
-                    except AssertionError:
-                        pass
-                    print('Choose money you actually have')
+                curr_amount = int(fs_input('Please select an amount to withdraw ({0}M remaining): '.format(amount - subtotal), 'Choose money you actually have', lambda x: self.bank[x] > 0 and x in denominations))
                 self.bank[curr_amount] -= 1
                 payee.bank[curr_amount] += 1
                 subtotal += curr_amount
@@ -140,9 +147,7 @@ def win(player):
     for property in player.field.keys():
         if player.field[property] == colors[property]:
             full_sets += 1
-    if full_sets >= 3:
-        return True
-    return False
+    return full_sets >= 3
 
 def game_over():
     print('Game Over!')
@@ -193,14 +198,7 @@ class WildCard(Property):
         return 'Wild Card: {0}/{1}'.format(self.color1, self.color2)
 
     def action(self, player):
-        while True:
-            try:
-                tapped = input('Select a color to tap: ')
-                assert tapped in [self.color1, self.color2]
-                break
-            except (ValueError, AssertionError):
-                pass
-            print('Select a property that exists')
+        tapped = fs_input('Select a color to tap: ', 'Select a property that exists', lambda x: x in [self.color1, self.color2])
         player.field[tapped] += 1
 
 class UberWildCard(Card):
@@ -210,14 +208,7 @@ class UberWildCard(Card):
         return 'Über Wild Card: Can act as any property.'
 
     def action(self, player):
-        while True:
-            try:
-                chosen = input('Select a color to tap: ')
-                assert chosen in colors 
-                break
-            except (ValueError, AssertionError):
-                pass
-            print('Select a property that exists')
+        chosen = fs_input('Select a color to tap: ', 'Select a property that exists', lambda x: x in colors)
         player.field[chosen] += 1
 
 class House(Card):
@@ -231,14 +222,7 @@ class House(Card):
         full_sets = filter(full_set, player.field.items())
         for color, amount in full_sets: 
             print('{0}: {1}'.format(color, amount))
-        while True:
-            try:
-                applied = input('Select a property to house: ')
-                assert player.field[applied] > 0 and applied in [i[0] for i in full_sets]
-                break
-            except (ValueError, AssertionError):
-                pass
-            print('Select a full set')
+        applied = fs_input('Select a property to house: ', 'Select a full set', lambda x: player.field[x] > 0 and x in map(lambda x: x[0], full_sets))
         player.housed.append(applied)
 
 class Hotel(Card):
@@ -252,9 +236,10 @@ class Hotel(Card):
         def housed(field_item):
             color = field_item[0]
             return player.field[color] in player.housed
-        for color, amount in filter(housed, filter(full_set, player.field.items())):
+        full_housed = filter(housed, filter(full_set, player.field.items()))
+        for color, amount in full_housed:
             print('{0}: {1}'.format(color, amount))
-        applied = input('Select a property to house: ')
+        applied = fs_input('Select a property to hotel: ', 'Select a full set', lambda x: player.field[x] > 0 and x in map(lambda x: x[0], full_housed))
         player.hoteled.append(applied)
 
 class PassGo(Card):
@@ -292,14 +277,7 @@ class Rent(Card):
     def action(self, player):
         print("Player {0}'s current cards on field: ".format(player.order))
         print_dict(player.field)
-        while True:
-            try:
-                chosen_color = input('Select a property to apply rent to: ({0}/{1}) '.format(self.color1, self.color2))
-                assert player.field[chosen_color] > 0 and chosen_color in [self.color1, self.color2]
-                break
-            except (ValueError, AssertionError):
-                pass
-            print('Please select a property you have')
+        chosen_color = fs_input('Select a property to apply rent to: ({0}/{1}) '.format(self.color1, self.color2), 'Please select a property you have', lambda x: player.field[x] > 0 and x in [self.color1, self.color2])
         house_tax = 0
         if chosen_color in player.housed and chosen_color in player.hoteled:
             house_tax += 7
@@ -321,22 +299,9 @@ class TargetedRent(Rent):
         return 'Targeted Rent: Force a player to pay rent on a property.'
 
     def action(self, player):
-        while True:
-            try:
-                target = players[int(input('Select a player to target: '))]
-                break
-            except ValueError:
-                pass
-            print('Do not select yourself')
+        target = players[int(fs_input('Select a player to target: ', 'Do not select yourself', lambda x: int(x) != player.order))]
         print_dict(player.field)
-        while True:
-            try:
-                chosen_color = input('Select a property to apply rent to: ')
-                assert player.field[chosen_color] > 0
-                break
-            except (ValueError, AssertionError):
-                pass
-            print('Please select a property you have')
+        chosen_color = fs_input('Select a property to apply rent to: ', 'Please select a property you have', lambda x: player.field[x] > 0)
         house_tax = 0
         if chosen_color in player.housed and chosen_color in player.hoteled:
             house_tax += 7
@@ -353,14 +318,8 @@ class DebtCollector(Card):
         return 'Debt Collector: Force any player to pay you 5M.'
 
     def action(self, player):
-        while True:
-            try:
-                target = players[int(input('Select a player to target: '))]
-                break
-            except ValueError:
-                pass
-            print('Do not select yourself')
-        target.pay(player, 5)
+       target = players[int(fs_input('Select a player to target: ', 'Do not select yourself', lambda x: x != player.order))]
+       target.pay(player, 5)
 
 class Birthday(Card):
     """Forces all players to pay you 2M."""
@@ -383,14 +342,7 @@ class SlyDeal(Card):
         return 'Sly Deal: Force any player to give you a property *not* part of a full set.'
 
     def action(self, player):
-        while True:
-            try:
-                target = players[int(input('Select a player to target: '))]
-                assert target is not player
-                break
-            except (ValueError, AssertionError):
-                pass
-            print('Do not select yourself')
+        target = players[int(fs_input('Select a player to target: ', 'Do not select yourself', lambda x: int(x) != player.order))]
         print("Player {0}'s current non-full sets, pick a property): ".format(target.order))
         for color, amount in filter(not_full_set, target.field.items()):
             print('{0}: {1}'.format(color, amount))
@@ -406,13 +358,7 @@ class ForcedDeal(Card):
         return 'Forced Deal: Force any player to trade a property *not* part of a full set with you.'
 
     def action(self, player):
-        while True:
-            try:
-                target = players[int(input('Select a player to target: '))]
-                break
-            except ValueError:
-                pass
-            print('Do not select yourself')
+        target = players[int(fs_input('Select a player to target: ', 'Do not select yourself', lambda x: int(x) != player.order))]
         print("Your current field, pick a property): ".format(target.order))
         for color, amount in filter(not_full_set, player.field.items()):
             print('{0}: {1}'.format(color, amount))
@@ -425,6 +371,23 @@ class ForcedDeal(Card):
         target.field[get_prop] -= 1
         player.field[get_prop] += 1
         target.field[give_prop] += 1
+
+class DealBreaker(Card):
+    """Takes a full set from a player."""
+    can_no = True
+
+    def __repr__(self):
+        return 'Deal Breaker: Steal a full set.'
+
+    def action(self, player):
+        target = players[int(fs_input('Select a player to target: ', 'Do not select yourself', lambda x: int(x) != player.order))]
+        print("Player {0}'s full sets: ".format(target.order))
+        full_sets = filter(full_set, player.field.items())
+        for color, amount in full_sets: 
+            print('{0}: {1}'.format(color, amount))
+        chosen_set = fs_input('Select a full set: ', 'Select a *full* set that actually exists', lambda x: x in map(lambda x: x[0], full_sets))
+        player.field[chosen_set] += target.field[chosen_set]
+        target.field[chosen_set] = 0
 
 ## CONSTRUCTORS ##
 def construct_money():
@@ -490,14 +453,7 @@ def construct_actions():
 ## INITIALIZATION ##
 deck = construct_money() + construct_props() + construct_rents() + construct_actions()
 
-while True:
-    try:
-        size = int(input('Number of players: '))
-        assert size >= 2 and size <= 5
-        break
-    except (ValueError, AssertionError):
-        pass
-    print('Too few or too many players')
+size = int(fs_input('Number of players: ', 'Too few or too many players', lambda x: int(x) >= 2 and int(x) <= 5))
 
 players = [Player(i) for i in range(size)]
 print('Game started with {0} players'.format(len(players)))
