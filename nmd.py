@@ -1,7 +1,9 @@
-'Not Monopoly Deal by Bryan Ngo'
+"""Not Monopoly Deal by Bryan Ngo
+Repo: https://github.com/bdngo/not-monopoly-deal
+"""
 
 # GLOBALS #
-import random
+from random import shuffle
 
 discards = []
 denominations = (1, 2, 3, 4, 5, 10)
@@ -28,11 +30,11 @@ def draw_cards(player, number):
 
 
 def empty_deck_check(deck):
-    """Checks if the main deck is empty and reshuffles the discards pile if it is."""
+    """Checks if DECK is empty and reshuffles DISCARDS if it is."""
     if len(deck) == 0:
         for _ in discards:
             deck.append(discards.pop())
-        random.shuffle(deck)
+        shuffle(deck)
 
 
 def not_full_set(field_item):
@@ -48,14 +50,34 @@ def full_set(field_item):
 
 
 def print_dict(dictionary):
-    """Prints the keys and values of a dictionary in human-readable format."""
+    """Prints the keys and values of a dictionary in human-readable format.
+
+    >>> items = {1: 2, 3: 4, 5: 6}
+    >>> print_dict(items)
+    1: 2
+    3: 4
+    5: 6
+    """
     for key, value in dictionary.items():
         print('{0}: {1}'.format(key, value))
 
 
 def fs_input(statement, error, assertions=lambda x: True):
-    """Continuously asks for input with STATEMENT until ASSERTIONS is true, otherwise print ERROR.
-    Returns the input."""
+    """Asks for input using STATEMENT and prints ERROR until ASSERTIONS is true.
+    Returns the input.
+
+    >>> fs_input(
+    ...     'Put a number greater than 2: ',
+    ...     'Not a number greater than 2',
+    ...     lambda x: int(x) > 2
+    ... )
+    Put a number greater than 2: 1
+    Not a number greater than 2
+    Put a number greater than 2: a
+    Not a number greater than 2
+    Put a number greater than 2: 4
+    '4'
+    """
     while True:
         try:
             output = input(statement)
@@ -118,7 +140,7 @@ class Player:
                 curr_amount = int(fs_input(
                     'Please select an amount to withdraw ({0}M remaining): '.format(amount - subtotal),
                     'Choose money you actually have',
-                    lambda x: self.bank[x] > 0 and x in denominations
+                    lambda x: self.bank[int(x)] > 0 and int(x) in denominations
                 ))
                 self.bank[curr_amount] -= 1
                 payee.bank[curr_amount] += 1
@@ -264,7 +286,7 @@ class House(Card):
         applied = fs_input(
             'Select a property to house: ',
             'Select a full set',
-            lambda x: player.field[x] > 0 and x in map(lambda x: x[0], full_sets)
+            lambda x: x in map(lambda x: x[0], full_sets)
         )
         player.housed.append(applied)
 
@@ -505,6 +527,8 @@ def construct_props():
         properties.extend([
             WildCard('Yellow', 'Red'),
             WildCard('Orange', 'Purple')
+            UberWildCard(),
+            UberWildCard()
         ])
     properties.extend([
         WildCard('Green', 'Blue'),
@@ -525,7 +549,7 @@ def construct_rents():
             Rent('Brown', 'Light Blue'),
             Rent('Purple', 'Orange'),
             Rent('Railroad', 'Utility'),
-            Rent('Red', 'Yellow')
+            Rent('Yellow', 'Red')
         ])
     for _ in range(3):
         rents.append(TargetedRent())
@@ -535,7 +559,10 @@ def construct_rents():
 def construct_actions():
     """Returns a list of action cards."""
     actions = []
-    actions.extend([PassGo() for _ in range(10)])
+    actions.extend(
+        [PassGo() for _ in range(10)]
+        + [DealBreaker(), DealBreaker()]
+    )
     for _ in range(3):
         actions.extend([
             DebtCollector(),
@@ -559,12 +586,12 @@ size = int(fs_input(
 
 players = [Player(i) for i in range(size)]
 print('Game started with {0} players'.format(len(players)))
-random.shuffle(deck)
+shuffle(deck)
 for i in players:
     draw_cards(i, 5)
 
 turn_count = 1
-while True:  # TODO: replace with win condition
+while True:
     turn(players[turn_count - 1])
     turn_count = (turn_count + 1) % len(players)
 

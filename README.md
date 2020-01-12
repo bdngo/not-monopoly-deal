@@ -1,6 +1,6 @@
 Python program simulating the game *Monopoly Deal* by Hasbro and sold by Cartamundi.
 
-**Modifications from original game:**
+# Modifications from original game:
 
 * All properties are worth the same amount of cash.
 * Properties of the same color are equal (i.e. no names for properties).
@@ -8,17 +8,18 @@ Python program simulating the game *Monopoly Deal* by Hasbro and sold by Cartamu
 * Giving up 1 property ends the rent.
 * Wild cards are treated as normal properties as soon as they are played (i.e. tapping WCs not possible).
 
-**How to Download and Play:**
+# How to Download and Play:
 
 1. Download `nmd.py`.
 2. Run the command
 ```bash
-python3 [-i] nmd.py
+python3 [ -i ] nmd.py
 ```
-in your terminal.
+in your terminal. The `-i` flag can be used for testing.
+
 3. Enjoy!
 
-**Cards**
+# Cards
 
 Card Name | Function | Notes
 --------- | -------- | -----
@@ -37,14 +38,16 @@ Sly Deal | Allows you to take a property *not* part of a full set from another p
 Forced Deal | Allows you to trade a property with another player.
 Deal Breaker | Allows you to steal a full set from another player.
 
-**Rules:**
+# Rules:
 
 1. Each player draws 5 cards from the pile.
 2. On their turn, a player draws 2 cards. They can then play up to 3 cards, whether it be money or a property.
 3. The goal is to get 3 fulls sets of properties.
 
-**TODO:**
+# TODO:
 
-- [ ] Add Just Say No's
-- [ ] Try to make game more faithful to original in general
+- [ ] add Just Say No's
+- [ ] have a cleaner win condition
+- [ ] allow tapping of wild cards
+- [ ] allow "selling" of properties and actions
 
