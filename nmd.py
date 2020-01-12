@@ -62,7 +62,7 @@ def print_dict(dictionary):
         print('{0}: {1}'.format(key, value))
 
 
-def fs_input(statement, error, assertions=lambda x: True):
+def fs_input(statement, error='', assertions=lambda x: True):
     """Asks for input using STATEMENT and prints ERROR until ASSERTIONS is true.
     Returns the input.
 
@@ -127,26 +127,26 @@ class Player:
             if sum(self.field.values()) + sum(self.bank.values()) == 0:
                 print('Player {0} has nothing, skipping...'.format(self.order))
                 return
-            try:
-                if not sum(self.bank.values()):
-                    print_dict(self.field)
-                    curr_property = input('No more money! Please select a property to give up: ')
-                    assert curr_property in colors.keys() and self.field[curr_property] > 0
-                    self.field[curr_property] -= 1
-                    payee.field[curr_property] += 1
-                    return
-                print("Player {0}'s current bank: ".format(self.order))
-                print_dict(self.bank)
-                curr_amount = int(fs_input(
-                    'Please select an amount to withdraw ({0}M remaining): '.format(amount - subtotal),
-                    'Choose money you actually have',
-                    lambda x: self.bank[int(x)] > 0 and int(x) in denominations
-                ))
-                self.bank[curr_amount] -= 1
-                payee.bank[curr_amount] += 1
-                subtotal += curr_amount
-            except ValueError:
-                pass
+            if not sum(self.bank.values()):
+                print_dict(self.field)
+                curr_property = fs_input(
+                    'No more money! Please select a property to give up: ',
+                    'Choose a property you have',
+                    lambda x: x in colors.keys() and self.field[x] > 0
+                )
+                self.field[curr_property] -= 1
+                payee.field[curr_property] += 1
+                return
+            print("Player {0}'s current bank: ".format(self.order))
+            print_dict(self.bank)
+            curr_amount = int(fs_input(
+                'Please select an amount to withdraw ({0}M remaining): '.format(amount - subtotal),
+                'Choose money you actually have',
+                lambda x: self.bank[int(x)] > 0 and int(x) in denominations
+            ))
+            self.bank[curr_amount] -= 1
+            payee.bank[curr_amount] += 1
+            subtotal += curr_amount
 
 
 def turn(player):
@@ -180,7 +180,7 @@ def turn(player):
         return
     while len(player.hand) > 7:
         print(player)
-        dis_card = int(input('Too many cards! Select a card to discard: \n'))
+        dis_card = int(fs_input('Too many cards! Select a card to discard: \n'))
         discards.append(player.hand.pop(dis_card))
 
 
@@ -440,10 +440,15 @@ class SlyDeal(Card):
             'Do not select yourself',
             lambda x: int(x) != player.order
         ))]
-        print("Player {0}'s current non-full sets, pick a property): ".format(target.order))
-        for color, amount in filter(not_full_set, target.field.items()):
+        not_full = filter(not_full_set, target.field.items())
+        print("Player {0}'s current non-full sets: ".format(target.order))
+        for color, amount in not_full:
             print('{0}: {1}'.format(color, amount))
-        stolen_prop = input('Select a property to sly deal: ')
+        stolen_prop = fs_input(
+            'Select a property to sly deal: ',
+            'Select from the above list',
+            lambda x: x in map(lambda x: x[0], not_full)
+        )
         target.field[stolen_prop] -= 1
         player.field[stolen_prop] += 1
 
@@ -461,17 +466,27 @@ class ForcedDeal(Card):
             'Do not select yourself',
             lambda x: int(x) != player.order
         ))]
-        print("Your current field, pick a property): ".format(target.order))
-        for color, amount in filter(not_full_set, player.field.items()):
+        self_nfull = filter(not_full_set, player.field.items())
+        target_nfull = filter(not_full_set, target.field.items())
+        print("Your current non-full sets: ".format(self.order))
+        for color, amount in self_nfull:
             print('{0}: {1}'.format(color, amount))
-        give_prop = input('Select a property to give up: ')
-        print("Player {0}'s current field, pick a property): ".format(target.order))
-        for color, amount in filter(not_full_set, target.field.items()):
+        give_prop = fs_input(
+            'Select a property to give: ',
+            'Select from the above list',
+            lambda x: x in map(lambda x: x[0], self_nfull)
+        )
+        print("Player {0}'s non-full sets: ".format(target.order))
+        for color, amount in target_nfull:
             print('{0}: {1}'.format(color, amount))
-        get_prop = input('Select a property to get: ')
+        take_prop = fs_input(
+            'Select a property to take: ',
+            'Select from the above list',
+            lambda x: x in map(lambda x: x[0], target_nfull)
+        )
         player.field[give_prop] -= 1
-        target.field[get_prop] -= 1
-        player.field[get_prop] += 1
+        target.field[take_prop] -= 1
+        player.field[take_prop] += 1
         target.field[give_prop] += 1
 
 
@@ -489,13 +504,13 @@ class DealBreaker(Card):
             lambda x: int(x) != player.order
         ))]
         print("Player {0}'s full sets: ".format(target.order))
-        full_sets = filter(full_set, player.field.items())
-        for color, amount in full_sets:
+        target_full = filter(full_set, target.field.items())
+        for color, amount in target_full:
             print('{0}: {1}'.format(color, amount))
         chosen_set = fs_input(
             'Select a full set: ',
             'Select a *full* set that actually exists',
-            lambda x: x in map(lambda x: x[0], full_sets)
+            lambda x: x in map(lambda x: x[0], target_full)
         )
         player.field[chosen_set] += target.field[chosen_set]
         target.field[chosen_set] = 0
@@ -526,7 +541,7 @@ def construct_props():
     for _ in range(2):
         properties.extend([
             WildCard('Yellow', 'Red'),
-            WildCard('Orange', 'Purple')
+            WildCard('Orange', 'Purple'),
             UberWildCard(),
             UberWildCard()
         ])
