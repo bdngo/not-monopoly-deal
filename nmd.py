@@ -299,11 +299,10 @@ class Hotel(Card):
 
     def action(self, player):
         print("Player {0}'s current housed full sets: ".format(player.order))
-
-        def housed(field_item):
-            color = field_item[0]
-            return player.field[color] in player.housed
-        full_housed = filter(housed, filter(full_set, player.field.items()))
+        full_housed = filter(
+            lambda x: player.field(x[0]) in player.housed and full_set(x),
+            player.field.items()
+        )
         for color, amount in full_housed:
             print('{0}: {1}'.format(color, amount))
         applied = fs_input(
