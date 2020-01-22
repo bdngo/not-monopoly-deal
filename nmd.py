@@ -10,7 +10,7 @@ denominations = (1, 2, 3, 4, 5, 10)
 colors = {
     'Brown': 2,
     'Light Blue': 3,
-    'Pink': 3,
+    'Purple': 3,
     'Orange': 3,
     'Red': 3,
     'Yellow': 3,
@@ -104,7 +104,8 @@ class Player:
         print('Current cards on field: ')
         print_dict(self.field)
         print('\nCurrent bank: ')
-        print_dict(self.bank)
+        for denom, amount in self.bank.items():
+            print('{0}M: {1}'.format(denom, amount))
         print('\nCurrent hand: ')
         for i in range(len(self.hand)):
             print('[{0}]: {1}'.format(i, self.hand[i]))
@@ -164,13 +165,25 @@ def turn(player):
         try:
             curr_card = input(
                 'Player {0} has {1} action(s) remaining.\n'
-                'Select a card to play (type "end" to end turn): '.format(player.order, 3 - actions)
+                'Select a card to play (type "end" to end turn, "sell" to sell card): '.format(player.order, 3 - actions)
             )
             if curr_card == 'end' or not len(player.hand):
                 break
+            elif curr_card == 'sell':
+                print('\nCurrent hand: ')
+                for i in range(len(player.hand)):
+                    print('[{0}]: {1}'.format(i, player.hand[i]))
+                sold = int(fs_input(
+                    'Select a card to sell: ',
+                    'Select a non-money card in your hand',
+                    lambda x: not isinstance(x, Money)
+                ))
+                sold_card = player.hand.pop(sold)
+                player.bank[sold_card.worth] += 1
+                discards.append(sold_card)
             else:
                 curr_card = int(curr_card)
-            player.play(curr_card)
+                player.play(curr_card)
             actions += 1
         except (ValueError, IndexError):
             pass
@@ -211,7 +224,7 @@ class Card:
 
 class Money(Card):
     """Used to pay off rents and the like.
-    Comes in denoominations of 1, 2, 3, 4, 5, 10.
+    Comes in denominations of 1, 2, 3, 4, 5, 10.
     """
 
     def __init__(self, amount):
@@ -227,12 +240,24 @@ class Money(Card):
 
 class Property(Card):
     can_house = True
-
+    worths = {
+        'Brown': 1,
+        'Light Blue': 1,
+        'Purple': 2,
+        'Orange': 2,
+        'Red': 3,
+        'Yellow': 3,
+        'Green': 4,
+        'Blue': 4,
+        'Railroad': 2,
+        'Utility': 2
+    }
     def __init__(self, color):
         self.color = color
+        self.worth = self.worths[color]
 
     def __repr__(self):
-        return 'Property: {0}'.format(self.color)
+        return 'Property: {0} ({1})'.format(self.color, self.worth)
 
     def action(self, player):
         player.field[self.color] += 1
@@ -244,9 +269,10 @@ class WildCard(Property):
     def __init__(self, color1, color2):
         self.color1 = color1
         self.color2 = color2
+        self.worth = max(Property.worths[color1], Property.worths[color2])
 
     def __repr__(self):
-        return 'Wild Card: {0}/{1}'.format(self.color1, self.color2)
+        return 'Wild Card: {0}/{1} ({2})'.format(self.color1, self.color2, self.worth)
 
     def action(self, player):
         tapped = fs_input(
@@ -259,6 +285,7 @@ class WildCard(Property):
 
 class UberWildCard(Card):
     """Can act as any property."""
+    worth = float('inf')
 
     def __repr__(self):
         return 'Über Wild Card: Can act as any property.'
@@ -270,13 +297,15 @@ class UberWildCard(Card):
             lambda x: x in colors
         )
         player.field[chosen] += 1
+        self.worth = Property.worths[chosen]
 
 
 class House(Card):
     """Adds 3M to its applied full set."""
+    worth = 3
 
     def __repr__(self):
-        return 'House: Adds 3M to the rent of any full set.'
+        return 'House: Adds 3M to the rent of any full set.' + ' ({0})'.format(self.worth)
 
     def action(self, player):
         print("Player {0}'s current full sets): ".format(player.order))
@@ -293,9 +322,10 @@ class House(Card):
 
 class Hotel(Card):
     """Adds 4M to its applied housed full set."""
+    worth = 4
 
     def __repr__(self):
-        return 'Hotel: Adds 4M to the rent of a housed full set.'
+        return 'Hotel: Adds 4M to the rent of a housed full set.' + ' ({0})'.format(self.worth)
 
     def action(self, player):
         print("Player {0}'s current housed full sets: ".format(player.order))
@@ -315,9 +345,10 @@ class Hotel(Card):
 
 class PassGo(Card):
     """Draws 2 cards."""
+    worth = 1
 
     def __repr__(self):
-        return 'Pass GO: Draw 2 cards.'
+        return 'Pass GO: Draw 2 cards.' + ' ({0})'.format(self.worth)
 
     def action(self, player):
         draw_cards(player, 2)
@@ -329,7 +360,7 @@ class Rent(Card):
     rents = {
         'Brown': (1, 2),
         'Light Blue': (2, 4, 7),
-        'Pink': (1, 2, 4),
+        'Purple': (1, 2, 4),
         'Orange': (1, 3, 5),
         'Red': (2, 3, 6),
         'Yellow': (2, 4, 6),
@@ -338,13 +369,14 @@ class Rent(Card):
         'Railroad': (1, 2, 3, 4),
         'Utility': (1, 2)
     }
+    worth = 1
 
     def __init__(self, color1, color2):
         self.color1 = color1
         self.color2 = color2
 
     def __repr__(self):
-        return 'Rent: {0}/{1}'.format(self.color1, self.color2)
+        return 'Rent: {0}/{1}'.format(self.color1, self.color2) + ' ({0})'.format(self.worth)
 
     def action(self, player):
         print("Player {0}'s current cards on field: ".format(player.order))
@@ -368,12 +400,13 @@ class Rent(Card):
 
 class TargetedRent(Rent):
     """Applies rent to a specific player."""
+    worth = 3
 
     def __init__(self):
         return
 
     def __repr__(self):
-        return 'Targeted Rent: Force a player to pay rent on a property.'
+        return 'Targeted Rent: Force a player to pay rent on a property.' + ' ({0})'.format(self.worth)
 
     def action(self, player):
         target = players[int(fs_input(
@@ -399,9 +432,10 @@ class TargetedRent(Rent):
 class DebtCollector(Card):
     """Forces any player to pay you 5M."""
     can_no = True
+    worth = 3
 
     def __repr__(self):
-        return 'Debt Collector: Force any player to pay you 5M.'
+        return 'Debt Collector: Force any player to pay you 5M.' + ' ({0})'.format(self.worth)
 
     def action(self, player):
         target = players[int(fs_input(
@@ -415,9 +449,10 @@ class DebtCollector(Card):
 class Birthday(Card):
     """Forces all players to pay you 2M."""
     can_no = True
+    worth = 2
 
     def __repr__(self):
-        return "It's My Birthday: Force all players to pay you 2M."
+        return "It's My Birthday: Force all players to pay you 2M." + ' ({0})'.format(self.worth)
 
     def action(self, player):
         payers = players[:]
@@ -429,9 +464,10 @@ class Birthday(Card):
 class SlyDeal(Card):
     """Forces a player to give you one of their properties."""
     can_no = True
+    worth = 3
 
     def __repr__(self):
-        return 'Sly Deal: Force any player to give you a property *not* part of a full set.'
+        return 'Sly Deal: Force any player to give you a property *not* part of a full set.' + ' ({0})'.format(self.worth)
 
     def action(self, player):
         target = players[int(fs_input(
@@ -455,9 +491,10 @@ class SlyDeal(Card):
 class ForcedDeal(Card):
     """Forces a player to trade a property with you."""
     can_no = True
+    worth = 3
 
     def __repr__(self):
-        return 'Forced Deal: Force any player to trade a property *not* part of a full set with you.'
+        return 'Forced Deal: Force any player to trade a property *not* part of a full set with you.' + ' ({0})'.format(self.worth)
 
     def action(self, player):
         target = players[int(fs_input(
@@ -492,9 +529,10 @@ class ForcedDeal(Card):
 class DealBreaker(Card):
     """Takes a full set from a player."""
     can_no = True
+    worth = 5
 
     def __repr__(self):
-        return 'Deal Breaker: Steal a full set.'
+        return 'Deal Breaker: Steal a full set.' + ' ({0})'.format(self.worth)
 
     def action(self, player):
         target = players[int(fs_input(
