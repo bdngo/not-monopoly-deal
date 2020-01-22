@@ -2,11 +2,11 @@ Python program simulating the game _Monopoly Deal_ by Hasbro and sold by Cartamu
 
 # Modifications from original game:
 
-_ All properties are worth the same amount of cash.
-_ Properties of the same color are equal (i.e. no names for properties).
-_ Priority for rent goes money first, then property.
-_ Giving up 1 property ends the rent.
-_ Wild cards are treated as normal properties as soon as they are played (i.e. tapping WCs not possible).
+* All properties are worth the same amount of cash.
+* Properties of the same color are equal (i.e. no names for properties).
+* Priority for rent goes money first, then property.
+* Giving up 1 property ends the rent.
+* Wild cards are treated as normal properties as soon as they are played (i.e. tapping WCs not possible).
 
 # How to Download and Play:
 
