@@ -219,7 +219,7 @@ class Card:
         return 'Card'
 
     def action(self, player):
-        return self.number
+        return "This is a placeholder."
 
 
 class Money(Card):
@@ -504,7 +504,7 @@ class ForcedDeal(Card):
         ))]
         self_nfull = filter(not_full_set, player.field.items())
         target_nfull = filter(not_full_set, target.field.items())
-        print("Your current non-full sets: ".format(self.order))
+        print("Your current non-full sets: ")
         for color, amount in self_nfull:
             print('{0}: {1}'.format(color, amount))
         give_prop = fs_input(
