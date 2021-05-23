@@ -1,3 +1,5 @@
+import os
+import json
 from random import shuffle
 
 DENOMINATIONS = (1, 2, 3, 4, 5, 10)
@@ -13,16 +15,22 @@ COLORS = {
     'Railroad': 4,
     'Utility': 2
 }
+STATE_PATH = os.path.join(os.getcwd(), "tmp")
+DECK_PATH = os.path.join(STATE_PATH, "deck.json")
+DISCARD_PATH = os.path.join(STATE_PATH, "discards.json")
+PLAYER_PATH = os.path.join(STATE_PATH, "players.json")
 
 def draw_cards(player, number):
     """Draws NUMBER cards into PLAYER's hand."""
-    assert isinstance(player, Player)
     for _ in range(number):
         player.draw()
 
 
 def empty_deck_check(deck):
     """Checks if DECK is empty and reshuffles DISCARDS if it is."""
+    with open(DISCARD_PATH, 'r') as f:
+        discards = json.load(f)
+
     if len(deck) == 0:
         for _ in discards:
             deck.append(discards.pop())
@@ -32,13 +40,13 @@ def empty_deck_check(deck):
 def not_full_set(field_item):
     """Checks if all FIELD_ITEMs are not members of a full set."""
     color, amount = field_item[0], field_item[1]
-    return amount < colors[color] and amount > 0
+    return amount < COLORS[color] and amount > 0
 
 
 def full_set(field_item):
     """Checks if all FIELD_ITEMs are members of a full set."""
     color, amount = field_item[0], field_item[1]
-    return amount >= colors[color]
+    return amount >= COLORS[color]
 
 
 def print_dict(dictionary):

@@ -1,3 +1,4 @@
+import json
 from utils import *
 
 # CARDS #
@@ -9,7 +10,7 @@ class Card:
     def __repr__(self):
         return "Card"
 
-    def action(self, player):
+    def action(self):
         return "This is a placeholder."
 
 
@@ -106,7 +107,7 @@ class House(Card):
         applied = fs_input(
             "Select a property to house: ",
             "Select a full set",
-            lambda x: x in map(lambda x: x[0], full_sets)
+            lambda x: x in [i[0] for i in full_sets]
         )
         player.housed.append(applied)
 
@@ -120,16 +121,14 @@ class Hotel(Card):
 
     def action(self, player):
         print(f"Player {player.order}'s current housed full sets: ")
-        full_housed = filter(
-            lambda x: player.field(x[0]) in player.housed and full_set(x),
-            player.field.items()
-        )
+        full_housed = [i for i in player.field.items
+            if player.field(i[0]) in player.housed and full_set(i)]
         for color, amount in full_housed:
             print(f"{color}: {amount}")
         applied = fs_input(
             "Select a property to hotel: ",
             "Select a full set",
-            lambda x: player.field[x] > 0 and x in map(lambda x: x[0], full_housed)
+            lambda x: player.field[x] > 0 and x in [i[0] for i in full_housed]
         )
         player.hoteled.append(applied)
 
@@ -170,6 +169,9 @@ class Rent(Card):
         return f"Rent: {self.color1}/{self.color2} ({self.worth})"
 
     def action(self, player):
+        with open(PLAYER_PATH, 'r') as f:
+            players = json.load(f)
+
         print(f"Player {player.order}'s current cards on field: ")
         print_dict(player.field)
         chosen_color = fs_input(
@@ -199,6 +201,9 @@ class TargetedRent(Rent):
         return f"Targeted Rent: Force a player to pay rent on a property. ({self.worth})"
 
     def action(self, player):
+        with open(PLAYER_PATH, 'r') as f:
+            players = json.load(f)
+
         target = players[int(fs_input(
             "Select a player to target: ",
             "Do not select yourself",
@@ -228,6 +233,9 @@ class DebtCollector(Card):
         return f"Debt Collector: Force any player to pay you 5M. ({self.worth})"
 
     def action(self, player):
+        with open(PLAYER_PATH, 'r') as f:
+            players = json.load(f)
+
         target = players[int(fs_input(
             "Select a player to target: ",
             "Do not select yourself",
@@ -245,6 +253,9 @@ class Birthday(Card):
         return f"It's My Birthday: Force all players to pay you 2M. ({self.worth})"
 
     def action(self, player):
+        with open(PLAYER_PATH, 'r') as f:
+            players = json.load(f)
+
         payers = [i for i in players if i != player]
         for i in payers:
             i.pay(player, 2)
@@ -259,6 +270,9 @@ class SlyDeal(Card):
         return f"Sly Deal: Force any player to give you a property *not* part of a full set. ({self.worth})"
 
     def action(self, player):
+        with open(PLAYER_PATH, 'r') as f:
+            players = json.load(f)
+
         target = players[int(fs_input(
             "Select a player to target: ",
             "Do not select yourself",
@@ -271,7 +285,7 @@ class SlyDeal(Card):
         stolen_prop = fs_input(
             "Select a property to sly deal: ",
             "Select from the above list",
-            lambda x: x in map(lambda x: x[0], not_full)
+            lambda x: x in [i[0] for i in not_full]
         )
         target.field[stolen_prop] -= 1
         player.field[stolen_prop] += 1
@@ -286,6 +300,9 @@ class ForcedDeal(Card):
         return f"Forced Deal: Force any player to trade a property *not* part of a full set with you. ({self.worth})"
 
     def action(self, player):
+        with open(PLAYER_PATH, 'r') as f:
+            players = json.load(f)
+
         target = players[int(fs_input(
             "Select a player to target: ",
             "Do not select yourself",
@@ -299,7 +316,7 @@ class ForcedDeal(Card):
         give_prop = fs_input(
             "Select a property to give: ",
             "Select from the above list",
-            lambda x: x in map(lambda x: x[0], self_nfull)
+            lambda x: x in [i[0] for i in self_nfull]
         )
         print(f"Player {target.order}'s non-full sets: ")
         for color, amount in target_nfull:
@@ -307,7 +324,7 @@ class ForcedDeal(Card):
         take_prop = fs_input(
             "Select a property to take: ",
             "Select from the above list",
-            lambda x: x in map(lambda x: x[0], target_nfull)
+            lambda x: x in [i[0] for i in target_nfull]
         )
         player.field[give_prop] -= 1
         target.field[take_prop] -= 1
@@ -324,6 +341,9 @@ class DealBreaker(Card):
         return f"Deal Breaker: Steal a full set. ({self.worth})"
 
     def action(self, player):
+        with open(PLAYER_PATH, 'r') as f:
+            players = json.load(f)
+
         target = players[int(fs_input(
             "Select a player to target: ",
             "Do not select yourself",
@@ -336,7 +356,7 @@ class DealBreaker(Card):
         chosen_set = fs_input(
             "Select a full set: ",
             "Select a *full* set that actually exists",
-            lambda x: x in map(lambda x: x[0], target_full)
+            lambda x: x in [i[0] for i in target_full]
         )
         player.field[chosen_set] += target.field[chosen_set]
         target.field[chosen_set] = 0
