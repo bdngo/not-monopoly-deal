@@ -1,73 +1,108 @@
-from cards import *
+from typing import Sequence
 
-def construct_money():
+from cards import (
+    Birthday,
+    Card,
+    Color,
+    DealBreaker,
+    DebtCollector,
+    Denomination,
+    ForcedDeal,
+    Hotel,
+    House,
+    Money,
+    PassGo,
+    Property,
+    Rent,
+    SlyDeal,
+    TargetedRent,
+    UberWildCard,
+    WildCard,
+)
+
+
+def construct_money() -> list[Money]:
     """Returns a list of Money instances."""
-    money = []
-    for _ in range(6):
-        money.append(Money(1))
-    for _ in range(5):
-        money.append(Money(2))
-    for _ in range(3):
-        money.extend([Money(3), Money(4)])
-    for _ in range(2):
-        money.append(Money(5))
-    money.append(Money(10))
+    money = (
+        [Money(Denomination.ONE)] * 6
+        + [Money(Denomination.TWO)] * 5
+        + [Money(Denomination.THREE)] * 3
+        + [Money(Denomination.FOUR)] * 3
+        + [Money(Denomination.FIVE)] * 2
+        + [Money(Denomination.TEN)]
+    )
     return money
 
 
-def construct_props():
+def construct_properties() -> list[Property]:
     """Returns a list of Property instances."""
+    color_amount_lookup = {
+        Color.BROWN: ["Baltic Avenue", "Mediterranean Avenue"],
+        Color.LIGHT_BLUE: ["Connecticut Avenue", "Oriental Avenue", "Vermont Avenue"],
+        Color.PURPLE: ["St. Charles Avenue", "Virginia Avenue", "States Avenue"],
+        Color.ORANGE: ["New York Avenue", "St. James Place", "Tennessee Avenue"],
+        Color.RED: ["Kentucky Avenue", "Indiana Avenue", "Illinois Avenue"],
+        Color.YELLOW: ["Ventnor Avenue", "Marvin Gardens", "Atlantic Avenue"],
+        Color.GREEN: ["North Carolina Avenue", "Pacific Avenue", "Pennsylvania Avenue"],
+        Color.BLUE: ["Boardwalk", "Park Place"],
+        Color.RAILROAD: [
+            "Short Line",
+            "B. & O. Railroad",
+            "Reading Railroad",
+            "Pennsylvania Railroad",
+        ],
+        Color.UTILITY: ["Water Works", "Electric Company"],
+    }
+
     properties = []
-    for color in COLORS.keys():
-        for _ in range(COLORS[color]):
-            properties.append(Property(color))
-    for _ in range(2):
-        properties.extend([
-            WildCard("Yellow", "Red"),
-            WildCard("Orange", "Purple"),
+    for color, names in color_amount_lookup.items():
+        properties.extend([Property(color, n) for n in names])
+    properties.extend(
+        [
+            WildCard((Color.YELLOW, Color.RED)),
+            WildCard((Color.ORANGE, Color.PURPLE)),
             UberWildCard(),
-            UberWildCard()
-        ])
-    properties.extend([
-        WildCard("Green", "Blue"),
-        WildCard("Brown", "Light Blue"),
-        WildCard("Railroad", "Green"),
-        WildCard("Railroad", "Light Blue"),
-        WildCard("Railroad", "Utility"),
-    ])
+            UberWildCard(),
+        ]
+        * 2
+    )
+    properties.extend(
+        [
+            WildCard((Color.GREEN, Color.BLUE)),
+            WildCard((Color.BROWN, Color.LIGHT_BLUE)),
+            WildCard((Color.RAILROAD, Color.GREEN)),
+            WildCard((Color.RAILROAD, Color.LIGHT_BLUE)),
+            WildCard((Color.RAILROAD, Color.UTILITY)),
+        ]
+    )
     return properties
 
 
-def construct_rents():
+def construct_rents() -> Sequence[Card]:
     """Returns a list of Rent instances."""
-    rents = []
-    for _ in range(2):
-        rents.extend([
-            Rent("Green", "Blue"),
-            Rent("Brown", "Light Blue"),
-            Rent("Purple", "Orange"),
-            Rent("Railroad", "Utility"),
-            Rent("Yellow", "Red")
-        ])
-    for _ in range(3):
-        rents.append(TargetedRent())
+    rents = [
+        Rent((Color.GREEN, Color.BLUE)),
+        Rent((Color.BROWN, Color.LIGHT_BLUE)),
+        Rent((Color.PURPLE, Color.ORANGE)),
+        Rent((Color.RAILROAD, Color.UTILITY)),
+        Rent((Color.YELLOW, Color.RED)),
+    ] * 2 + [TargetedRent()] * 3
     return rents
 
 
-def construct_actions():
+def construct_actions() -> list[Card]:
     """Returns a list of action cards."""
     actions = []
+    actions.extend([PassGo()] * 10 + [DealBreaker()] * 2)
     actions.extend(
-        [PassGo() for _ in range(10)]
-        + [DealBreaker(), DealBreaker()]
-    )
-    for _ in range(3):
-        actions.extend([
+        [
             DebtCollector(),
             Birthday(),
             SlyDeal(),
             ForcedDeal(),
             House(),
-            Hotel()
-        ])
+            Hotel(),
+        ]
+        * 3
+    )
     return actions
