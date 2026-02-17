@@ -7,17 +7,17 @@ from random import shuffle
 
 from cards import *
 from constructors import *
-from utils import *
 from player import Player
+from utils import *
 
 
 def turn(player):
     """Draws 2 from DECK, then asks PLAYER to play CARD no more than 3 times."""
     assert isinstance(player, Player), "Not an instance of Player class"
 
-    with open(DECK_PATH, 'r') as f:
+    with open(DECK_PATH, "r") as f:
         deck = json.load(f)
-    with open(DISCARD_PATH, 'r') as f:
+    with open(DISCARD_PATH, "r") as f:
         discards = json.load(f)
 
     empty_deck_check(deck)
@@ -26,7 +26,7 @@ def turn(player):
     while actions < 3:
         if not len(player.hand):
             draw_cards(player, 5)
-        print('-' * 80)
+        print("-" * 80)
         print(f"It is now Player {player.order}'s turn\n")
         print(player)
         try:
@@ -39,11 +39,13 @@ def turn(player):
                 print("\nCurrent hand: ")
                 for i in range(len(player.hand)):
                     print(f"[{i}]: {player.hand[i]}")
-                sold = int(fs_input(
-                    "Select a card to sell: ",
-                    "Select a non-money card in your hand",
-                    lambda x: not isinstance(x, Money)
-                ))
+                sold = int(
+                    fs_input(
+                        "Select a card to sell: ",
+                        "Select a non-money card in your hand",
+                        lambda x: not isinstance(x, Money),
+                    )
+                )
                 sold_card = player.hand.pop(sold)
                 player.bank[sold_card.worth] += 1
                 discards.append(sold_card)
@@ -62,11 +64,10 @@ def turn(player):
         dis_card = int(fs_input("Too many cards! Select a card to discard: \n"))
         discards.append(player.hand.pop(dis_card))
 
-    with open(DECK_PATH, 'w') as f:
+    with open(DECK_PATH, "w") as f:
         json.dump(deck, f)
-    with open(DISCARD_PATH, 'w') as f:
+    with open(DISCARD_PATH, "w") as f:
         json.dump(discards, f)
-
 
 
 def win(player):
@@ -83,22 +84,26 @@ def game_over():
 
 # INITIALIZATION #
 def main():
-    deck = construct_money() + construct_props() + construct_rents() + construct_actions()
+    deck = (
+        construct_money() + construct_props() + construct_rents() + construct_actions()
+    )
     discards = []
 
-    size = int(fs_input(
-        "Number of players: ",
-        "Too few or too many players",
-        lambda x: int(x) >= 2 and int(x) <= 5
-    ))
+    size = int(
+        fs_input(
+            "Number of players: ",
+            "Too few or too many players",
+            lambda x: int(x) >= 2 and int(x) <= 5,
+        )
+    )
 
     players = [Player(i) for i in range(size)]
     print(f"Game started with {len(players)} players")
     shuffle(deck)
 
-    with open(DECK_PATH, 'w') as f:
+    with open(DECK_PATH, "w") as f:
         json.dump(deck, f)
-    with open(DISCARD_PATH, 'w') as f:
+    with open(DISCARD_PATH, "w") as f:
         json.dump(discards, f)
 
     for i in players:
@@ -109,6 +114,6 @@ def main():
         turn(players[turn_count])
         turn_count = (turn_count + 1) % len(players)
 
+
 if __name__ == "__main__":
     main()
-
