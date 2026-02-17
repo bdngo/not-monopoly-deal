@@ -61,7 +61,6 @@ class Property(Card):
 
     color: Color
     name: str
-    rent_lookup: dict[int, int]
 
     @property
     def worth(self) -> int:
@@ -81,7 +80,6 @@ class WildCard(Card):
     """Can act as one of two properties. Takes 1 turn to tap."""
 
     colors: tuple[Color, Color]
-    rent_lookup: dict[int, int]
 
     @property
     def worth(self) -> int:
@@ -156,7 +154,7 @@ class Rent(Card):
     # }
 
 
-class TargetedRent(Rent):
+class TargetedRent(Card):
     """Applies rent to a specific player."""
 
     @property
