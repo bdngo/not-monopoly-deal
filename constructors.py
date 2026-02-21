@@ -21,8 +21,8 @@ from cards import (
 )
 
 
-def construct_money() -> list[Money]:
-    """Returns a list of Money instances."""
+def construct_money() -> Sequence[Card]:
+    """Return a list of Money instances."""
     money = (
         [Money(Denomination.ONE)] * 6
         + [Money(Denomination.TWO)] * 5
@@ -34,8 +34,8 @@ def construct_money() -> list[Money]:
     return money
 
 
-def construct_properties() -> list[Property]:
-    """Returns a list of Property instances."""
+def construct_properties() -> Sequence[Card]:
+    """Return a list of Property instances."""
     color_amount_lookup = {
         Color.BROWN: ["Baltic Avenue", "Mediterranean Avenue"],
         Color.LIGHT_BLUE: ["Connecticut Avenue", "Oriental Avenue", "Vermont Avenue"],
@@ -79,7 +79,7 @@ def construct_properties() -> list[Property]:
 
 
 def construct_rents() -> Sequence[Card]:
-    """Returns a list of Rent instances."""
+    """Return a list of Rent instances."""
     rents = [
         Rent((Color.GREEN, Color.BLUE)),
         Rent((Color.BROWN, Color.LIGHT_BLUE)),
@@ -90,8 +90,8 @@ def construct_rents() -> Sequence[Card]:
     return rents
 
 
-def construct_actions() -> list[Card]:
-    """Returns a list of action cards."""
+def construct_actions() -> Sequence[Card]:
+    """Return a list of action cards."""
     actions = []
     actions.extend([PassGo()] * 10 + [DealBreaker()] * 2)
     actions.extend(
@@ -106,3 +106,13 @@ def construct_actions() -> list[Card]:
         * 3
     )
     return actions
+
+
+def construct_deck() -> list[Card]:
+    """Combine all sub-constructors to create a full deck."""
+    return (
+        construct_money()
+        + construct_properties()
+        + construct_rents()
+        + construct_actions()
+    )
