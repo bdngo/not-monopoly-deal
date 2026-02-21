@@ -114,6 +114,7 @@ class House(Card):
         return 3
 
 
+@dataclass(frozen=True)
 class Hotel(Card):
     """Adds 4M to its applied housed full set."""
 
@@ -122,6 +123,7 @@ class Hotel(Card):
         return 4
 
 
+@dataclass(frozen=True)
 class PassGo(Card):
     """Draws 2 cards."""
 
@@ -154,6 +156,7 @@ class Rent(Card):
     # }
 
 
+@dataclass(frozen=True)
 class TargetedRent(Card):
     """Applies rent to a specific player."""
 
@@ -162,6 +165,7 @@ class TargetedRent(Card):
         return 1
 
 
+@dataclass(frozen=True)
 class DebtCollector(Card):
     """Forces any player to pay you 5M."""
 
@@ -170,6 +174,7 @@ class DebtCollector(Card):
         return 3
 
 
+@dataclass(frozen=True)
 class Birthday(Card):
     """Forces all players to pay you 2M."""
 
@@ -178,6 +183,7 @@ class Birthday(Card):
         return 2
 
 
+@dataclass(frozen=True)
 class SlyDeal(Card):
     """Forces a player to give you one of their properties."""
 
@@ -186,6 +192,7 @@ class SlyDeal(Card):
         return 3
 
 
+@dataclass(frozen=True)
 class ForcedDeal(Card):
     """Forces a player to trade a property with you."""
 
@@ -194,6 +201,7 @@ class ForcedDeal(Card):
         return 3
 
 
+@dataclass(frozen=True)
 class DealBreaker(Card):
     """Takes a full set from a player."""
 
@@ -202,6 +210,7 @@ class DealBreaker(Card):
         return 5
 
 
+@dataclass(frozen=True)
 class JustSayNo(Card):
     """Negates the actions of any other player."""
 
