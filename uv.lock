@@ -41,11 +41,24 @@ name = "not-monopoly-deal"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "python-statemachine" },
     { name = "sqlalchemy" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "sqlalchemy", specifier = ">=2.0.46" }]
+requires-dist = [
+    { name = "python-statemachine", specifier = ">=2.6.0" },
+    { name = "sqlalchemy", specifier = ">=2.0.46" },
+]
+
+[[package]]
+name = "python-statemachine"
+version = "2.6.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/92/82/7340e8b3ae588bcbe698f38d3d5578fe99a99ea6a9dad083b9e7316ddb03/python_statemachine-2.6.0.tar.gz", hash = "sha256:adda2e7327ed7ecc96069c49e830fcc8b11a5f9d899ab16742317167b3d7997d", size = 552809, upload-time = "2026-02-13T21:37:35.745Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6e/b5/c6702da31050b49f4694617a1a1b47b2509ae65ab7eafe8093f3d1c8b0ad/python_statemachine-2.6.0-py3-none-any.whl", hash = "sha256:1b1bfae954e0a980ef3e8617948efa12b5e9a0fef7bb0284ed6e212efede8db4", size = 53167, upload-time = "2026-02-13T21:37:34.116Z" },
+]
 
 [[package]]
 name = "sqlalchemy"
